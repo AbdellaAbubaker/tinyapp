@@ -93,7 +93,7 @@ app.get('/urls/:id', (req, res) => {
 
 app.get('/u/:id', (req, res) => {
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlsDatabase[shortURL];
 
   if (longURL) {
     res.redirect(longURL);
@@ -104,10 +104,15 @@ app.get('/u/:id', (req, res) => {
 
 app.post('/urls/:id/delete', (req, res) => {
   const id = req.params.id;
-  
   delete urlsDatabase[id];
+  res.redirect('/urls')
+});
 
-  res.redirect('/urls');
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const updatedLongURL = req.body.longURL;
+
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {

@@ -10,9 +10,8 @@
     />
     <title>URL - TinyApp Example</title>
   </head>
-
   <body>
-    <%- include('partials/_header') %>
+    <%- include ('partials/_header') %>
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
@@ -21,7 +20,16 @@
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
       </div>
-      <div class="card-footer text-muted"></div>
+      <div class="card-footer text-muted">
+       <h1><label for="Edit">Edit:</label></h1> 
+        <form class="form-inline justify-content-center " method="POST" action="/urls/<%= id %>">
+          
+          <label for="longURLInput">New URL:</label>
+            <input type="text" class="form-control" id="longURLInput" name="longURL" value="<%= longURL.longURL %>">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+        </form>
+      </div>
     </div>
     <!-- Bootstrap JS -->
     <script
