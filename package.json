@@ -2,8 +2,9 @@
   "name": "tinyapp",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "express_server.js",
   "scripts": {
+    "start": "./node_modules/.bin/nodemon -L express_server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -11,13 +12,18 @@
     "url": "git+https://github.com/AbdellaAbubaker/tinyapp.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Abdella Abubaker and aabdella.abubaker@gmail.com",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/AbdellaAbubaker/tinyapp/issues"
   },
   "homepage": "https://github.com/AbdellaAbubaker/tinyapp#readme",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "ejs": "^3.1.9",
     "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   }
 }
