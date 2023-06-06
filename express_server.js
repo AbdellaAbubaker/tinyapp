@@ -11,7 +11,10 @@ const {
   generateRandomString,
   getUserByEmail,
   urlsForUser
-} = require("./helpers")
+} = require("./helpers");
+const {
+  users
+} = require("./database");
 const PORT = 8080; // default port 8080
 
 
@@ -22,14 +25,6 @@ app.use(cookieSession({
   keys: ['keys1'],
   maxAge: 24 * 60 * 1000
 }));
-
-const urlsDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
-const users = {}
-
 
 app.use(express.urlencoded({
   extended: true
@@ -43,10 +38,10 @@ app.get("/", (req, res) => {
   }
 })
 
-app.get("urls", (req, res) => {
+app.get("/urls", (req, res) => {
   const userId = req.session.user_id;
   if (!userId) {
-    return res.status(401).send("PLease lgo in or register");
+    return res.status(401).send("PLease login or register");
 
   }
   const user = user = user[userId];
@@ -69,7 +64,7 @@ app.get("/urls/new", (req, res) => {
     res.status(401).send("Please log in or register");
     // If the user does exist then render the urls_new.ejs file
   } else {
-    const user = users[userId];
+    const user = user[userId];
 
     const templateVars = {
       user
@@ -81,12 +76,10 @@ app.get("/urls/new", (req, res) => {
 
 });
 
-
-
-app.get("/urls/: id", (req, res) => {
+app.get("/urls/:id", (req, res) => {
   const userID = req.session.user_id
 
-  if (!userId) {
+  if (!userID) {
     return res.status(401).send("Please login or register");
 
   }
@@ -107,7 +100,7 @@ app.get("/urls/: id", (req, res) => {
 })
 
 app.post("/urls", (req, res) => {
-  const userId = req.sessions.user_id;
+  const userId = req.session.user_id;
 
   if (!userId) {
     return res.status(401).send("Please login or register");
