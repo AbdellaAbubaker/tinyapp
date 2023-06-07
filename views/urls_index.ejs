@@ -25,21 +25,25 @@
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
-            <th scope="col">Delete</th>
-            <th scope="col">Edit</th>
+            <!-- <th scope="col">Delete</th> -->
+            <!-- <th scope="col">Edit</th> -->
           </tr>
         </thead>
         <tbody>
-          <% for (const shortURL in urls) { %>
+          <% for (let id in urls) { %>
             <tr>
-              <% const longURL = urls[shortURL]; %>
-              <td><%= shortURL %></td>
-                <td> <%= longURL %> </td>
-              <td><form method="POST" action="/urls/<%= shortURL %>/delete">
-              <button type="submit">Delete</button>
+              <% id %>
+              <td><%= urls[id].longURL%></td>
+              <td>
+              <form method="POST" action= "/urls/<%= id %>/delete">
+              <input type="hidden" name="_method" value="Delete">
+              <button type="submit" class="btn btn-danger">Delete</button>
             </form>
-          <td><form method="get" action="/urls/<%= shortURL %>"><button type="submit">Edit</button></form> 
-          </tr>
+              </td>
+          <td>
+            <a href= '/urls/<%= id %> '> Edit </a> 
+          </td>
+        </tr>
           <% } %>          
         </tbody>
       </table>
