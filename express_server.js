@@ -1,8 +1,7 @@
 const express = require("express");
 const app = express();
 
-// const cookieParser = require("cookie-parser")
-// const app = express();
+
 
 const cookieSession = require("cookie-session")
 const bcrypt = require("bcryptjs");
@@ -13,7 +12,8 @@ const {
   urlsForUser
 } = require("./helpers");
 const {
-  users
+  users,
+  urlDatabase
 } = require("./database");
 const PORT = 8080; // default port 8080
 
@@ -42,6 +42,8 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   // Extract the user ID from the session
   const userId = req.session.user_id;
+  console.log("userId", userId)
+  console.log(req.session)
   
   // If the user is not logged in, send a 401 Unauthorized status and an error message
   if (!userId) {
@@ -49,10 +51,10 @@ app.get("/urls", (req, res) => {
   }
 
   // Retrieve the user object from the user ID
-  const user = user[userId];
+  const user = users[userId];
   
   // Get the URLs associated with the user
-  const userURL = urlsForUser(userId, urlsDatabase);
+  const userURL = urlsForUser(userId, urlDatabase);
   
   // Prepare the template variables for rendering the "urls_index" view
   const templateVars = {
@@ -74,7 +76,7 @@ app.get("/urls/new", (req, res) => {
     res.status(401).send("Please log in or register");
     // If the user does exist then render the urls_new.ejs file
   } else {
-    const user = user[userId];
+    const user = users[userId];
 
     const templateVars = {
       user
@@ -93,11 +95,11 @@ app.get("/urls/:id", (req, res) => {
     return res.status(401).send("Please login or register");
 
   }
-  const url = urlsDatabase[req.params.id]
+  const url = urlDatabase[req.params.id]
   if (!url) {
     return res.status(404).send("URL not found");
   }
-  if (url.userID !== userId) {
+  if (url.userID !== userID) {
     return res.status(403).send("You don't have access to this URL")
   }
 
@@ -139,7 +141,7 @@ app.post("/urls/:delete", (req, res) => {
   }
 
   const id = req.params.id;
-  delete urlsDatabase[id]
+  delete urlDatabase[id]
   res.redirect("/urls")
 });
 
@@ -153,15 +155,15 @@ app.post("/urls/:id", (req, res) => {
 
   const shortURL = req.params.id;
   const newLongURL = req.body.longURL;
-  urlsDatabase[shortURL].longURL = newLongURL
+  urlDatabase[shortURL].longURL = newLongURL
   res.redirect("/urls")
 });
 
 app.get("/u/:id", (req, res) => {
-  if (!urlsDatabase[req.params.id]) {
+  if (!urlDatabase[req.params.id]) {
     res.status(400).send("URL not found");
   } else {
-    const url = urlsDatabase[req.params.id].longURL
+    const url = urlDatabase[req.params.id].longURL
     res.redirect(url);
   }
 });
@@ -194,7 +196,7 @@ app.post("/logout", (req, res) => {
 app.get("/register", (req, res) => {
   const user = users[req.session["user_id"]];
   const templateVars = {
-    users
+    user
   }
 
   if (user) {
@@ -217,14 +219,16 @@ app.post("/register", (req, res) => {
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const id = generateRandomString
+  const id = generateRandomString()
+
 
   const newUser = {
     id,
     email,
     password: hashedPassword
   }
-
+  console.log("id", id)
+  req.session.user_id = id
   users[id] = newUser;
   res.redirect("/urls")
 })
