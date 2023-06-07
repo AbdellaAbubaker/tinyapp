@@ -38,21 +38,31 @@ app.get("/", (req, res) => {
   }
 })
 
+// Route for handling GET requests to "/urls"
 app.get("/urls", (req, res) => {
+  // Extract the user ID from the session
   const userId = req.session.user_id;
+  
+  // If the user is not logged in, send a 401 Unauthorized status and an error message
   if (!userId) {
-    return res.status(401).send("PLease login or register");
-
+    return res.status(401).send("Please login or register");
   }
-  const user = user = user[userId];
-  const userURL = urlsForUser(userId, urlsDatabase);
 
+  // Retrieve the user object from the user ID
+  const user = user[userId];
+  
+  // Get the URLs associated with the user
+  const userURL = urlsForUser(userId, urlsDatabase);
+  
+  // Prepare the template variables for rendering the "urls_index" view
   const templateVars = {
     urls: userURL,
     user,
-  }
-  res.render("urls_index", templateVars)
-})
+  };
+  
+  // Render the "urls_index" view and pass in the template variables
+  res.render("urls_index", templateVars);
+});
 
 app.get("/urls/new", (req, res) => {
   // This variable is used to get the user from the users object
