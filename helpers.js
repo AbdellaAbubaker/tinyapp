@@ -20,8 +20,8 @@ const generateRandomString = () => {
   const urlsForUser = (id, urlDatabase) => {
     const filteredUrls = {};
     for (const shortUrl in urlDatabase) {
-        if (urlDatabase[shortUrl].userId === id) {
-            filteredUrls[shortUrl] = urlDatabase[shortlUrl];
+        if (urlDatabase[shortUrl].userID === id) {
+            filteredUrls[shortUrl] = urlDatabase[shortUrl];
         }
     }
     return filteredUrls

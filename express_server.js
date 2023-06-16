@@ -1,8 +1,7 @@
 const express = require("express");
 const app = express();
 
-// const cookieParser = require("cookie-parser")
-// const app = express();
+
 
 const cookieSession = require("cookie-session")
 const bcrypt = require("bcryptjs");
@@ -13,7 +12,8 @@ const {
   urlsForUser
 } = require("./helpers");
 const {
-  users
+  users,
+  urlDatabase
 } = require("./database");
 const PORT = 8080; // default port 8080
 
@@ -31,10 +31,11 @@ app.use(express.urlencoded({
 }));
 
 app.get("/", (req, res) => {
-  if (req.session.user_id) {
+  const user = users[req.session.user_id];
+  if (user) {
     res.redirect("/urls")
   } else {
-    res.redirect("/login")
+    res.redirect("/register")
   }
 })
 
@@ -42,24 +43,25 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   // Extract the user ID from the session
   const userId = req.session.user_id;
-  
+  const user = users[userId];
+  console.log("userId", userId)
+  console.log(req.session)
+
   // If the user is not logged in, send a 401 Unauthorized status and an error message
-  if (!userId) {
+  if (!user) {
     return res.status(401).send("Please login or register");
   }
 
-  // Retrieve the user object from the user ID
-  const user = user[userId];
-  
+
   // Get the URLs associated with the user
-  const userURL = urlsForUser(userId, urlsDatabase);
-  
+  const userURL = urlsForUser(userId, urlDatabase);
+
   // Prepare the template variables for rendering the "urls_index" view
   const templateVars = {
     urls: userURL,
     user,
   };
-  
+
   // Render the "urls_index" view and pass in the template variables
   res.render("urls_index", templateVars);
 });
@@ -67,33 +69,33 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   // This variable is used to get the user from the users object
   const userId = req.session.user_id;
+  const user = users[userId];
 
   // This is used to check if the user exists
-  if (!userId) {
-    res.redirect("/login")
-    res.status(401).send("Please log in or register");
+  if (!user) {
+    return res.redirect("/login")
     // If the user does exist then render the urls_new.ejs file
-  } else {
-    const user = user[userId];
-
-    const templateVars = {
-      user
-    };
-
-    // console.log(templateVars)
-    res.render("urls_new", templateVars);
   }
+
+  const templateVars = {
+    user
+  };
+
+  // console.log(templateVars)
+  res.render("urls_new", templateVars);
+
 
 });
 
 app.get("/urls/:id", (req, res) => {
-  const userID = req.session.user_id
+  const userId = req.session.user_id
+  const user = users[userId];
 
-  if (!userID) {
+  if (!user) {
     return res.status(401).send("Please login or register");
 
   }
-  const url = urlsDatabase[req.params.id]
+  const url = urlDatabase[req.params.id]
   if (!url) {
     return res.status(404).send("URL not found");
   }
@@ -104,64 +106,72 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: url.longURL,
-    user: users[userId]
+    user,
   };
   res.render("urls_show", templateVars);
 })
 
 app.post("/urls", (req, res) => {
   const userId = req.session.user_id;
+  const user = users[userId];
 
-  if (!userId) {
+  if (!user) {
     return res.status(401).send("Please login or register");
 
   }
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    userID: userId
+    userID: userId,
   };
 
-  res.redirect(`/urls/ ${shortURL}`);
+  res.redirect(`/urls/${shortURL}`);
 
 });
 
-app.post("/urls/:delete", (req, res) => {
-  if (!req.session.user_id) {
+app.post("/urls/:id/delete", (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+  if (!user) {
     return res.status(401).send("Please login or register")
   }
   const url = urlDatabase[req.params.id];
   if (!url) {
     return res.status(404).send("url not found");
   }
-  if (user.userID !== req.session.user_id) {
+  if (url.userID !== req.session.user_id) {
     return res.status(403).send("You dont have access to this URL");
   }
 
   const id = req.params.id;
-  delete urlsDatabase[id]
+  delete urlDatabase[id]
   res.redirect("/urls")
 });
 
 app.post("/urls/:id", (req, res) => {
-  if (!req.session.user_id) {
+  const userId = req.session.user_id;
+  const user = users[userId];
+  const shortURL = req.params.id;
+  const url = urlDatabase[shortURL];
+  
+
+  if (!user) {
     return res.status(404).send("URL not found")
   }
   if (url.userID !== req.session.user_id) {
     return res.status(403).send("You dont have access to this URL");
   }
 
-  const shortURL = req.params.id;
   const newLongURL = req.body.longURL;
-  urlsDatabase[shortURL].longURL = newLongURL
+  urlDatabase[shortURL].longURL = newLongURL
   res.redirect("/urls")
 });
 
 app.get("/u/:id", (req, res) => {
-  if (!urlsDatabase[req.params.id]) {
+  if (!urlDatabase[req.params.id]) {
     res.status(400).send("URL not found");
   } else {
-    const url = urlsDatabase[req.params.id].longURL
+    const url = urlDatabase[req.params.id].longURL
     res.redirect(url);
   }
 });
@@ -171,7 +181,7 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   if (!email || !password) {
-    return res.status(400).send("Emai; and password can't be blankled")
+    return res.status(400).send("Email; and password can't be blankled")
   }
   const user = getUserByEmail(email, users);
 
@@ -192,9 +202,9 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const user = users[req.session["user_id"]];
+  const user = users[req.session.user_id];
   const templateVars = {
-    users
+    user
   }
 
   if (user) {
@@ -213,24 +223,26 @@ app.post("/register", (req, res) => {
     return
   }
   if (getUserByEmail(email, users)) {
-    res.status(400).send("Email is already in the databgase. Please login");
+    res.status(400).send("Email is already in the database. Please login");
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const id = generateRandomString
+  const id = generateRandomString()
+
 
   const newUser = {
     id,
     email,
     password: hashedPassword
   }
-
+  console.log("id", id)
+  req.session.user_id = id
   users[id] = newUser;
   res.redirect("/urls")
 })
 
 app.get("/login", (req, res) => {
-  const user = users[req.session["user_id"]];
+  const user = users[req.session.user_id];
   const templateVars = {
     user
   }
@@ -245,4 +257,4 @@ app.get("/login", (req, res) => {
 })
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
-})
+});
