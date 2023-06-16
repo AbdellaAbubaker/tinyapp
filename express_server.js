@@ -35,7 +35,7 @@ app.get("/", (req, res) => {
   if (user) {
     res.redirect("/urls")
   } else {
-    res.redirect("/login")
+    res.redirect("/register")
   }
 })
 
